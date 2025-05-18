@@ -5,6 +5,10 @@ class TestUrbanRoutes:
     def test_set_route(self):
         # Add in S8
         print("function created for set route")
+        if data.is_url_reachable():
+            print("Server is running.")
+        else:
+            print("Server is NOT reachable.")
         pass
 
     def test_select_plan(self):
@@ -35,13 +39,13 @@ class TestUrbanRoutes:
     def test_order_2_ice_creams(self):
         # Add in S8
         print("function created for order 2 ice creams")
-        for _ in range(2):
+        ice_cream_order = "vanilla"
+        for count in range(2):
             # Add in S8
+            print(f"Ordering ice cream #{count + 1}: {ice_cream_order}")
             pass
 
     def test_car_search_model_appears(self):
         # Add in S8
         print("function created for car search model appears")
         pass
-
-
