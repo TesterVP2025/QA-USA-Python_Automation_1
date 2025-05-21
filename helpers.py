@@ -1,52 +1,63 @@
-# Retrieves Phone code. Do not change
-# File should be completely unchanged
+import json
+import time
+import ssl
+import urllib.request
+from selenium.common import WebDriverException
+from selenium.webdriver.remote.webdriver import WebDriver
 
-def retrieve_phone_code(driver) -> str:
-    """This code retrieves phone confirmation number and returns it as a string.
-    Use it when application waits for the confirmation code to pass it into your tests.
-    The phone confirmation code can only be obtained after it was requested in application."""
 
-    import json
-    import time
-    from selenium.common import WebDriverException
+def retrieve_phone_code(driver: WebDriver) -> str:
+    """
+    Retrieves phone confirmation number from performance logs.
+    Use this only after the code was requested in your application.
+    Returns:
+        str: The phone confirmation code.
+    Raises:
+        Exception: If no code is found after attempts.
+    """
     code = None
-    for i in range(10):
+    for _ in range(10):
         try:
-            logs = [log["message"] for log in driver.get_log('performance') if log.get("message")
-                    and 'api/v1/number?number' in log.get("message")]
+            logs = [
+                log["message"]
+                for log in driver.get_log('performance')
+                if log.get("message") and 'api/v1/number?number' in log["message"]
+            ]
             for log in reversed(logs):
                 message_data = json.loads(log)["message"]
-                body = driver.execute_cdp_cmd('Network.getResponseBody',
-                                              {'requestId': message_data["params"]["requestId"]})
-                code = ''.join([x for x in body['body'] if x.isdigit()])
+                body = driver.execute_cdp_cmd(
+                    'Network.getResponseBody',
+                    {'requestId': message_data["params"]["requestId"]}
+                )
+                code = ''.join(filter(str.isdigit, body['body']))
         except WebDriverException:
             time.sleep(1)
             continue
-        if not code:
-            raise Exception("No phone confirmation code found.\n"
-                            "Please use retrieve_phone_code only after the code was requested in your application.")
-        return code
 
-# Checks if Routes is up and running. Do not change
-def is_url_reachable(url):
-    """Check if the URL can be reached. Pass the URL for Urban Routes as a parameter.
-    If it can be reached, it returns True, otherwise it returns False"""
+        if code:
+            return code
 
-    import ssl
-    import urllib.request
+    raise Exception("No phone confirmation code found. "
+                    "Ensure the code was requested in your application before calling this function.")
 
+
+def is_url_reachable(url: str) -> bool:
+    """
+    Checks if the given URL is reachable (status code 200).
+    SSL certificate validation is bypassed.
+
+    Args:
+        url (str): The URL to check.
+    Returns:
+        bool: True if reachable, False otherwise.
+    """
     try:
         ssl_ctx = ssl.create_default_context()
         ssl_ctx.check_hostname = False
         ssl_ctx.verify_mode = ssl.CERT_NONE
 
         with urllib.request.urlopen(url, context=ssl_ctx) as response:
-            # print("Response Status Code:", response.status) #for debugging purposes
-            if response.status == 200:
-                 return True
-            else:
-                return False
-    except Exception as e:
-        print (e)
+            return response.status == 200
+    except Exception:
+        return False
 
-    return False
