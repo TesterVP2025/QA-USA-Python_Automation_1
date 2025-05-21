@@ -35,13 +35,11 @@ class TestUrbanRoutes:
         # Your test code here
 
     def test_order_2_ice_creams(self):
+        # Your test code here
         print("function created for order 2 ice creams")
-        ice_cream_order = "vanilla"
-        for count in range(2):
-            print(f"Ordering ice cream #{count + 1}: {ice_cream_order}")
-            # Your test code here
 
     def test_car_search_model_appears(self):
         print("function created for car search model appears")
         # Your test code here
+
 
