@@ -91,7 +91,7 @@ class UrbanRoutesPage:
         return self.driver.find_element(*self.car_modal).is_displayed()
 
     def get_confirm_message_text(self):
-        return self.driver.find_element(*self.confirm_message).text
+        return self.driver.find_element(*self.confirm_message).text 
 
 
 
