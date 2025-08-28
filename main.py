@@ -1,55 +1,85 @@
-from helpers import is_url_reachable
-from data import URBAN_ROUTES_URL
+import time
+import data
+import helpers
+from pages import UrbanRoutesPage
+
 
 class TestUrbanRoutes:
 
-    @classmethod
-    def setup_class(cls):
-        if is_url_reachable(URBAN_ROUTES_URL):
-            print("Connected to the Urban Routes server.")
-        else:
-            print("Cannot connect to Urban Routes. Check the server is on and still running.")
-
-    def test_set_route(self):
-        # Add in S8
-        print("function created for set route")
+    def test_click_phone_number_field(self):
         pass
 
-    def test_select_plan(self):
-        # Add in S8
-        print("function created for select plan")
-        pass
+    def test_enter_phone_number(self):
+        self.driver.get(data.URBAN_ROUTES_URL)
+        urban_routes_page = UrbanRoutesPage(self.driver)
+        urban_routes_page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
+        urban_routes_page.click_call_a_taxi_button()
+        urban_routes_page.click_supportive_plan()
+        time.sleep(3)
+        urban_routes_page.click_phone_number_field()
+        time.sleep(3)
+        urban_routes_page.enter_phone_number(data.PHONE_NUMBER)
+        time.sleep(3)
+        urban_routes_page.click_next_button()
+        actual_value = urban_routes_page.get_fill_phone_number()
+        expected_value = '+1 123 123 12 12'
+        assert expected_value in actual_value, f"Expected '{expected_value}', but got '{actual_value}'"
 
-    def test_fill_phone_number(self):
-        # Add in S8
-        print("function created for fill phone number")
-        pass
+    def test_next_button(self):
+        self.driver.get(data.URBAN_ROUTES_URL)
+        urban_routes_page = UrbanRoutesPage(self.driver)
+        urban_routes_page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
+        urban_routes_page.click_call_a_taxi_button()
+        urban_routes_page.click_supportive_plan()
+        time.sleep(3)
+        urban_routes_page.click_phone_number_field()
+        time.sleep(3)
+        urban_routes_page.enter_phone_number(data.PHONE_NUMBER)
+        time.sleep(3)
+        urban_routes_page.click_next_button()
+        assert urban_routes_page.click_next_button
 
-    def test_fill_card(self):
-        # Add in S8
-        print("function created for fill card")
-        pass
+    def test_set_phone(self):
+        self.driver.get(data.URBAN_ROUTES_URL)
+        urban_routes_page = UrbanRoutesPage(self.driver)
+        urban_routes_page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
+        urban_routes_page.click_call_a_taxi_button()
+        urban_routes_page.click_supportive_plan()
+        time.sleep(3)
+        urban_routes_page.click_phone_number_field()
+        time.sleep(3)
+        urban_routes_page.enter_phone_number(data.PHONE_NUMBER)
+        time.sleep(3)
+        urban_routes_page.click_next_button()
+        code = helpers.retrieve_phone_code(self.driver)
+        print(f"Retrieved phone code: {code}")
+        time.sleep(10)
+        urban_routes_page.fill_sms_code(code)
+        urban_routes_page.click_confirm_button()
+        # Add a wait to ensure the element is loaded
+        time.sleep(2)
+        actual_value = urban_routes_page.get_phone_value()
+        expected_value = '+1 123 123 12 12'
+        assert expected_value in actual_value, f"Expected '{expected_value}', but got '{actual_value}'"
 
-    def test_comment_for_driver(self):
-        # Add in S8
-        print("function created for comment for driver")
-        pass
-
-    def test_order_blanket_and_handkerchiefs(self):
-        # Add in S8
-        print("function created for order blanket and handkerchiefs")
-        pass
-
-    def test_order_2_ice_creams(self):
-        for count in range(2):
-            # Add in S8
-            print("function created for order 2 ice creams")
-            pass
-
-    def test_car_search_model_appears(self):
-        # Add in S8
-        print("function created for car search model appears")
-        pass
-
-
+    def test_payment_method(self):
+        self.driver.get(data.URBAN_ROBAN_ROUTES_URL)
+        urban_routes_page = UrbanRoutesPage(self.driver)
+        urban_routes_page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
+        urban_routes_page.click_call_a_taxi_button()
+        urban_routes_page.click_supportive_plan()
+        time.sleep(3)
+        urban_routes_page.click_phone_number_field()
+        time.sleep(3)
+        urban_routes_page.enter_phone_number(data.PHONE_NUMBER)
+        time.sleep(3)
+        urban_routes_page.click_next_button()
+        code = helpers.retrieve_phone_code(self.driver)
+        print(f"Retrieved phone code: {code}")
+        time.sleep(10)
+        urban_routes_page.fill_sms_code(code)
+        urban_routes_page.click_confirm_button()
+        # Add a wait to ensure the element is loaded
+        time.sleep(2)
+        urban_routes_page.click_payment_button()
 
