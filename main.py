@@ -1,81 +1,71 @@
-import time
 import pytest
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from pages import UrbanRoutesPage
 import data
 import helpers
-
+import time
 
 class TestUrbanRoutes:
 
     @classmethod
     def setup_class(cls):
-        chrome_options = Options()
-        chrome_options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
-        cls.driver = webdriver.Chrome(options=chrome_options)
+        cls.driver = webdriver.Chrome()
         cls.driver.maximize_window()
         cls.driver.implicitly_wait(5)
+
+    def test_set_route(self):
+        self.driver.get(data.URBAN_ROUTES_URL)
+        page = UrbanRoutesPage(self.driver)
+        page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
+        from_value = self.driver.find_element(*page.from_field).get_attribute("value")
+        to_value = self.driver.find_element(*page.to_field).get_attribute("value")
+        assert from_value == data.ADDRESS_FROM
+        assert to_value == data.ADDRESS_TO
+
+    def test_select_plan(self):
+        page = UrbanRoutesPage(self.driver)
+        page.click_call_a_taxi_button()
+        page.click_supportive_plan()
+        selected_class = self.driver.find_element(*page.supportive_plan_button).get_attribute("class")
+        assert "active" in selected_class
+
+    def test_fill_phone_number(self):
+        page = UrbanRoutesPage(self.driver)
+        page.set_phone_number(data.PHONE_NUMBER)
+        sms_code = helpers.retrieve_phone_code(data.PHONE_NUMBER)
+        page.set_phone_number(sms_code)
+        phone_value = self.driver.find_element(*page.phone_number_field).get_attribute("value")
+        assert phone_value == data.PHONE_NUMBER
+
+    def test_fill_card(self):
+        page = UrbanRoutesPage(self.driver)
+        page.fill_card_info(data.CARD_NUMBER, data.CARD_EXPIRY, data.CARD_CVV)
+        payment_text = self.driver.find_element(*page.payment_method_display).text
+        assert "Card" in payment_text
+
+    def test_comment_for_driver(self):
+        page = UrbanRoutesPage(self.driver)
+        page.fill_comment(data.DRIVER_COMMENT)
+        comment_value = self.driver.find_element(*page.comment_field).get_attribute("value")
+        assert comment_value == data.DRIVER_COMMENT
+
+    def test_order_blanket_and_handkerchiefs(self):
+        page = UrbanRoutesPage(self.driver)
+        checked = page.add_blanket_handkerchiefs()
+        assert checked is True
+
+    def test_order_2_ice_creams(self):
+        page = UrbanRoutesPage(self.driver)
+        page.add_ice_cream(2)
+        ice_count = page.get_ice_cream_count()
+        assert ice_count == 2
+
+    def test_car_search_model_appears(self):
+        page = UrbanRoutesPage(self.driver)
+        page.click_order_button()
+        assert page.car_search_modal_is_displayed() is True
 
     @classmethod
     def teardown_class(cls):
         cls.driver.quit()
-
-    def test_click_phone_number_field(self):
-        self.driver.get(data.URBAN_ROUTES_URL)
-        urban_routes_page = UrbanRoutesPage(self.driver)
-        urban_routes_page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
-        urban_routes_page.click_call_a_taxi_button()
-        urban_routes_page.click_supportive_plan()
-        time.sleep(3)
-        urban_routes_page.click_phone_number_field()
-        time.sleep(3)
-        assert True
-
-    def test_enter_phone_number(self):
-        self.driver.get(data.URBAN_ROUTES_URL)
-        urban_routes_page = UrbanRoutesPage(self.driver)
-        urban_routes_page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
-        urban_routes_page.click_call_a_taxi_button()
-        urban_routes_page.click_supportive_plan()
-        time.sleep(3)
-        urban_routes_page.click_phone_number_field()
-        time.sleep(3)
-        urban_routes_page.enter_phone_number(data.PHONE_NUMBER)
-        time.sleep(3)
-        urban_routes_page.click_next_button()
-        actual_value = urban_routes_page.get_fill_phone_number()
-        expected_value = '+1 123 123 12 12'
-        assert expected_value in actual_value
-
-    def test_next_button(self):
-        self.driver.get(data.URBAN_ROUTES_URL)
-        urban_routes_page = UrbanRoutesPage(self.driver)
-        urban_routes_page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
-        urban_routes_page.click_call_a_taxi_button()
-        urban_routes_page.click_supportive_plan()
-        time.sleep(3)
-        urban_routes_page.click_phone_number_field()
-        time.sleep(3)
-        urban_routes_page.enter_phone_number(data.PHONE_NUMBER)
-        time.sleep(3)
-        urban_routes_page.click_next_button()
-        assert urban_routes_page.click_next_button
-
-    def test_set_phone(self):
-        self.driver.get(data.URBAN_ROUTES_URL)
-        urban_routes_page = UrbanRoutesPage(self.driver)
-        urban_routes_page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
-        urban_routes_page.click_call_a_taxi_button()
-        urban_routes_page.click_supportive_plan()
-        time.sleep(3)
-        urban_routes_page.click_phone_number_field()
-        time.sleep(3)
-        urban_routes_page.enter_phone_number(data.PHONE_NUMBER)
-        time.sleep(3)
-        urban_routes_page.click_next_button()
-        code = helpers.retrieve_phone_code(self.driver)
-        time.sleep(10)
-        urban_routes_page.fill_sms_code(code)
-        urban_routes_pa
 
