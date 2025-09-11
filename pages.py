@@ -4,46 +4,46 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 import time
 
+
 class UrbanRoutesPage:
+    # ---------- Locators ----------
+    from_field = (By.ID, "from")
+    to_field = (By.ID, "to")
+
+    # Buttons
+    get_routes_button = (By.CLASS_NAME, "button.round")
+    call_a_taxi_button = (By.CSS_SELECTOR, ".smart-button-main")
+    supportive_plan_button = (By.CSS_SELECTOR, ".supportive-plan")
+    next_button = (By.CSS_SELECTOR, ".next-button")
+
+    # Phone field
+    phone_number_field = (By.ID, "phone-number")
+    sms_code_field = (By.ID, "sms-code")  # make sure your HTML matches
+    confirm_button = (By.CSS_SELECTOR, ".confirm-button")
+
+    # Payment fields
+    card_number_field = (By.ID, "card-number")
+    expiry_field = (By.ID, "expiry-date")
+    cvv_field = (By.ID, "cvv")
+    link_card_button = (By.CSS_SELECTOR, ".link-card-button")
+
+    # Comment field
+    comment_field = (By.ID, "comment-input")
+
+    # Ice cream & blanket sliders
+    blanket_slider = (By.ID, "blanket-slider")
+    ice_cream_add_button = (By.CSS_SELECTOR, ".ice-cream-add")
+    ice_cream_count = (By.CSS_SELECTOR, ".ice-cream-count")
+
+    # Order button & modal
+    order_button = (By.CSS_SELECTOR, ".order-button")
+    car_search_modal = (By.ID, "car-search-modal")
+
     def __init__(self, driver):
         self.driver = driver
 
-        # Route fields
-        self.from_field = (By.ID, "from")
-        self.to_field = (By.ID, "to")
-
-        # Buttons
-        self.get_routes_button = (By.CLASS_NAME, "button.round")
-        self.call_a_taxi_button = (By.CSS_SELECTOR, ".smart-button-main")
-        self.supportive_plan_button = (By.CSS_SELECTOR, ".supportive-plan")
-        self.next_button = (By.CSS_SELECTOR, ".next-button")
-
-        # Phone field
-        self.phone_number_field = (By.ID, "phone-number")
-        self.sms_code_field = (By.ID, "sms-code")  # make sure your HTML matches
-        self.confirm_button = (By.CSS_SELECTOR, ".confirm-button")
-
-        # Payment fields
-        self.card_number_field = (By.ID, "card-number")
-        self.expiry_field = (By.ID, "expiry-date")
-        self.cvv_field = (By.ID, "cvv")
-        self.link_card_button = (By.CSS_SELECTOR, ".link-card-button")
-
-        # Comment field
-        self.comment_field = (By.ID, "comment-input")
-
-        # Ice cream & blanket sliders
-        self.blanket_slider = (By.ID, "blanket-slider")
-        self.ice_cream_add_button = (By.CSS_SELECTOR, ".ice-cream-add")
-        self.ice_cream_count = (By.CSS_SELECTOR, ".ice-cream-count")
-
-        # Order button & modal
-        self.order_button = (By.CSS_SELECTOR, ".order-button")
-        self.car_search_modal = (By.ID, "car-search-modal")
-
     # ---------- Helper methods ----------
     def _click_element(self, locator, retries=3, wait_time=20):
-        # Handle iframe if present
         switched = False
         try:
             iframe = self.driver.find_element(By.CSS_SELECTOR, "iframe")
@@ -68,26 +68,39 @@ class UrbanRoutesPage:
             self.driver.switch_to.default_content()
 
     def _set_input(self, locator, value, wait_time=20):
-        WebDriverWait(self.driver, wait_time).until(
+        element = WebDriverWait(self.driver, wait_time).until(
             EC.visibility_of_element_located(locator)
-        ).clear()
-        WebDriverWait(self.driver, wait_time).until(
-            EC.visibility_of_element_located(locator)
-        ).send_keys(value)
+        )
+        element.clear()
+        element.send_keys(value)
 
     # ---------- Actions ----------
     def set_route(self, from_address, to_address):
         self._set_input(self.from_field, from_address)
         self._set_input(self.to_field, to_address)
+        WebDriverWait(self.driver, 3).until(
+            EC.visibility_of_element_located(self.get_routes_button)
+        )
         self._click_element(self.get_routes_button)
 
     def click_call_a_taxi_button(self):
+        WebDriverWait(self.driver, 3).until(
+            EC.visibility_of_element_located(self.call_a_taxi_button)
+        )
         self._click_element(self.call_a_taxi_button)
 
     def click_supportive_plan(self):
-        self._click_element(self.supportive_plan_button)
+        element = WebDriverWait(self.driver, 3).until(
+            EC.visibility_of_element_located(self.supportive_plan_button)
+        )
+        if element.get_attribute("class") != "tcard active":
+            self.driver.execute_script("arguments[0].scrollIntoView();", element)
+            element.click()
 
     def click_next_button(self):
+        WebDriverWait(self.driver, 3).until(
+            EC.visibility_of_element_located(self.next_button)
+        )
         self._click_element(self.next_button)
 
     def set_phone_number(self, phone_number):
