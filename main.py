@@ -18,8 +18,8 @@ class TestUrbanRoutes:
         self.driver.get(data.URBAN_ROUTES_URL)
         page = UrbanRoutesPage(self.driver)
         page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
-        from_value = self.driver.find_element(*page.from_field).get_attribute("value")
-        to_value = self.driver.find_element(*page.to_field).get_attribute("value")
+        from_value = page.get_from()
+        to_value = page.get_to()
         assert from_value == data.ADDRESS_FROM
         assert to_value == data.ADDRESS_TO
 
@@ -27,16 +27,14 @@ class TestUrbanRoutes:
         self.driver.get(data.URBAN_ROUTES_URL)
         page = UrbanRoutesPage(self.driver)
         page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
-        page.click_call_a_taxi_button()
         page.click_supportive_plan()
-        selected_class = self.driver.find_element(*page.supportive_plan_button).get_attribute("class")
+        selected_class = page.get_supportive_status()
         assert "active" in selected_class
 
     def test_fill_phone_number(self):
         self.driver.get(data.URBAN_ROUTES_URL)
         page = UrbanRoutesPage(self.driver)
         page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
-        page.click_call_a_taxi_button()
         page.click_supportive_plan()
         page.set_phone_number(data.PHONE_NUMBER)
         helpers.complete_phone_login(page, self.driver)
@@ -47,7 +45,6 @@ class TestUrbanRoutes:
         self.driver.get(data.URBAN_ROUTES_URL)
         page = UrbanRoutesPage(self.driver)
         page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
-        page.click_call_a_taxi_button()
         page.click_supportive_plan()
         page.add_card(data.CARD_NUMBER, data.CARD_EXPIRY, data.CARD_CODE)
         payment_text = self.driver.find_element(*page.link_card_button).text
@@ -57,7 +54,6 @@ class TestUrbanRoutes:
         self.driver.get(data.URBAN_ROUTES_URL)
         page = UrbanRoutesPage(self.driver)
         page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
-        page.click_call_a_taxi_button()
         page.click_supportive_plan()
         page.leave_comment(data.MESSAGE_FOR_DRIVER)
         comment_value = self.driver.find_element(*page.comment_field).get_attribute("value")
@@ -67,7 +63,6 @@ class TestUrbanRoutes:
         self.driver.get(data.URBAN_ROUTES_URL)
         page = UrbanRoutesPage(self.driver)
         page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
-        page.click_call_a_taxi_button()
         page.click_supportive_plan()
         checked = page.add_blanket_handkerchiefs()
         assert checked is True
@@ -76,7 +71,6 @@ class TestUrbanRoutes:
         self.driver.get(data.URBAN_ROUTES_URL)
         page = UrbanRoutesPage(self.driver)
         page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
-        page.click_call_a_taxi_button()
         page.click_supportive_plan()
         page.add_ice_cream(2)
         ice_count = page.get_ice_cream_count()
@@ -86,7 +80,6 @@ class TestUrbanRoutes:
         self.driver.get(data.URBAN_ROUTES_URL)
         page = UrbanRoutesPage(self.driver)
         page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
-        page.click_call_a_taxi_button()
         page.click_supportive_plan()
         page.click_order_button()
         assert page.is_car_search_modal_displayed() is True
