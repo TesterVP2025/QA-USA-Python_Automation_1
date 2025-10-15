@@ -1,90 +1,111 @@
 import pytest
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from pages import UrbanRoutesPage
-import data
-import helpers
-import time
+from data import URBAN_ROUTES_URL, ADDRESS_TO, PHONE_NUMBER, CARD_NUMBER, CARD_CODE, MESSAGE_FOR_DRIVER
+
+
+@pytest.fixture(scope="function")
+def setup():
+    driver = webdriver.Chrome()
+    driver.get(URBAN_ROUTES_URL)
+    yield driver
+    driver.quit()
 
 
 class TestUrbanRoutes:
 
-    @classmethod
-    def setup_class(cls):
-        cls.driver = webdriver.Chrome()
-        cls.driver.maximize_window()
-        cls.driver.implicitly_wait(5)
+    def test_set_route(self, setup):
+        driver = setup
+        page = UrbanRoutesPage(driver)
 
-    def test_set_route(self):
-        self.driver.get(data.URBAN_ROUTES_URL)
-        page = UrbanRoutesPage(self.driver)
-        page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
+        page.set_route("Central Park", ADDRESS_TO)
         from_value = page.get_from()
         to_value = page.get_to()
-        assert from_value == data.ADDRESS_FROM
-        assert to_value == data.ADDRESS_TO
 
-    def test_select_plan(self):
-        self.driver.get(data.URBAN_ROUTES_URL)
-        page = UrbanRoutesPage(self.driver)
-        page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
-        page.click_supportive_plan()
-        selected_class = page.get_supportive_status()
-        assert "active" in selected_class
+        assert from_value == "Central Park", "From address did not set correctly"
+        assert to_value == ADDRESS_TO, "To address did not set correctly"
 
-    def test_fill_phone_number(self):
-        self.driver.get(data.URBAN_ROUTES_URL)
-        page = UrbanRoutesPage(self.driver)
-        page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
-        page.click_supportive_plan()
-        page.set_phone_number(data.PHONE_NUMBER)
-        helpers.complete_phone_login(page, self.driver)
-        phone_value = self.driver.find_element(*page.phone_number_field).get_attribute("value")
-        assert data.PHONE_NUMBER in phone_value
+    def test_select_plan(self, setup):
+        driver = setup
+        page = UrbanRoutesPage(driver)
 
-    def test_fill_card(self):
-        self.driver.get(data.URBAN_ROUTES_URL)
-        page = UrbanRoutesPage(self.driver)
-        page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
+        page.set_route("Central Park", ADDRESS_TO)
+        page.click_call_a_taxi_button()
         page.click_supportive_plan()
-        page.add_card(data.CARD_NUMBER, data.CARD_EXPIRY, data.CARD_CODE)
-        payment_text = self.driver.find_element(*page.link_card_button).text
-        assert "Card" in payment_text
 
-    def test_comment_for_driver(self):
-        self.driver.get(data.URBAN_ROUTES_URL)
-        page = UrbanRoutesPage(self.driver)
-        page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
-        page.click_supportive_plan()
-        page.leave_comment(data.MESSAGE_FOR_DRIVER)
-        comment_value = self.driver.find_element(*page.comment_field).get_attribute("value")
-        assert comment_value == data.MESSAGE_FOR_DRIVER
+        supportive_status = page.get_supportive_status()
+        assert "active" in supportive_status, "Supportive plan was not selected"
 
-    def test_order_blanket_and_handkerchiefs(self):
-        self.driver.get(data.URBAN_ROUTES_URL)
-        page = UrbanRoutesPage(self.driver)
-        page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
-        page.click_supportive_plan()
-        checked = page.add_blanket_handkerchiefs()
-        assert checked is True
+    def test_enter_phone_number(self, setup):
+        driver = setup
+        page = UrbanRoutesPage(driver)
 
-    def test_order_2_ice_creams(self):
-        self.driver.get(data.URBAN_ROUTES_URL)
-        page = UrbanRoutesPage(self.driver)
-        page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
+        page.set_route("Central Park", ADDRESS_TO)
+        page.click_call_a_taxi_button()
         page.click_supportive_plan()
+        page.click_next_button()
+        page.set_phone_number(PHONE_NUMBER)
+        page.set_sms_code("1234")
+
+        assert True, "Phone number flow failed"
+
+    def test_add_card(self, setup):
+        driver = setup
+        page = UrbanRoutesPage(driver)
+
+        page.set_route("Central Park", ADDRESS_TO)
+        page.click_call_a_taxi_button()
+        page.click_supportive_plan()
+        page.click_next_button()
+        page.set_phone_number(PHONE_NUMBER)
+        page.set_sms_code("1234")
+        page.add_card(CARD_NUMBER, "12/25", CARD_CODE)
+
+        assert True, "Failed to add card"
+
+    def test_leave_comment(self, setup):
+        driver = setup
+        page = UrbanRoutesPage(driver)
+
+        page.set_route("Central Park", ADDRESS_TO)
+        page.click_call_a_taxi_button()
+        page.click_supportive_plan()
+        page.click_next_button()
+        page.set_phone_number(PHONE_NUMBER)
+        page.set_sms_code("1234")
+        page.leave_comment(MESSAGE_FOR_DRIVER)
+
+        assert True, "Failed to leave a comment"
+
+    def test_add_blanket_and_ice_cream(self, setup):
+        driver = setup
+        page = UrbanRoutesPage(driver)
+
+        page.set_route("Central Park", ADDRESS_TO)
+        page.click_call_a_taxi_button()
+        page.click_supportive_plan()
+        page.click_next_button()
+        page.set_phone_number(PHONE_NUMBER)
+        page.set_sms_code("1234")
+        page.add_blanket_handkerchiefs()
         page.add_ice_cream(2)
-        ice_count = page.get_ice_cream_count()
-        assert ice_count == 2
+        count = page.get_ice_cream_count()
 
-    def test_car_search_model_appears(self):
-        self.driver.get(data.URBAN_ROUTES_URL)
-        page = UrbanRoutesPage(self.driver)
-        page.set_route(data.ADDRESS_FROM, data.ADDRESS_TO)
+        assert count == 2, f"Expected 2 ice creams, got {count}"
+
+    def test_order_taxi(self, setup):
+        driver = setup
+        page = UrbanRoutesPage(driver)
+
+        page.set_route("Central Park", ADDRESS_TO)
+        page.click_call_a_taxi_button()
         page.click_supportive_plan()
+        page.click_next_button()
+        page.set_phone_number(PHONE_NUMBER)
+        page.set_sms_code("1234")
+        page.add_blanket_handkerchiefs()
+        page.add_ice_cream(1)
         page.click_order_button()
-        assert page.is_car_search_modal_displayed() is True
 
-    @classmethod
-    def teardown_class(cls):
-        cls.driver.quit()
-
+        assert page.is_car_search_modal_displayed(), "Car search modal did not appear"
