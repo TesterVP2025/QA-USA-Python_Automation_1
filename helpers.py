@@ -4,35 +4,51 @@ import ssl
 import urllib.request
 from selenium.common import WebDriverException
 from selenium.webdriver.remote.webdriver import WebDriver
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+
 
 def retrieve_phone_code(driver: WebDriver) -> str:
+    """
+    Retrieves the phone confirmation code from the browser's performance logs.
+    Automatically extracts the numeric confirmation code from the
+    api/v1/number response in the Chrome DevTools Protocol logs.
+    """
     code = None
-    for _ in range(10):
+
+    for _ in range(10):  # Retry up to 10 times
         try:
             logs = [
                 log["message"]
-                for log in driver.get_log('performance')
-                if log.get("message") and 'api/v1/number?number' in log["message"]
+                for log in driver.get_log("performance")
+                if log.get("message") and "api/v1/number?number" in log["message"]
             ]
+
             for log in reversed(logs):
                 message_data = json.loads(log)["message"]
+
                 body = driver.execute_cdp_cmd(
-                    'Network.getResponseBody',
-                    {'requestId': message_data["params"]["requestId"]}
+                    "Network.getResponseBody",
+                    {"requestId": message_data["params"]["requestId"]}
                 )
-                code = ''.join(filter(str.isdigit, body['body']))
+
+                code = "".join(filter(str.isdigit, body["body"]))
+
         except WebDriverException:
             time.sleep(1)
             continue
 
         if code:
-            return code
+            return code  # Return extracted digits
 
-    raise Exception("No phone confirmation code found. Ensure the code was requested before calling this function.")
+    raise Exception(
+        "No phone confirmation code found. Make sure the code request was triggered."
+    )
+
 
 def is_url_reachable(url: str) -> bool:
+    """
+    Checks whether the given URL is reachable by performing a simple HTTP GET request.
+    SSL certificate checks are disabled.
+    """
     try:
         ssl_ctx = ssl.create_default_context()
         ssl_ctx.check_hostname = False
@@ -40,14 +56,6 @@ def is_url_reachable(url: str) -> bool:
 
         with urllib.request.urlopen(url, context=ssl_ctx) as response:
             return response.status == 200
+
     except Exception:
         return False
-
-def complete_phone_login(page, driver):
-    WebDriverWait(driver, 20).until(EC.element_to_be_clickable(page.phone_number_field)).click()
-    WebDriverWait(driver, 20).until(EC.visibility_of_element_located(page.phone_number_field)).send_keys("+11231231212")
-    WebDriverWait(driver, 20).until(EC.element_to_be_clickable(page.next_button)).click()
-    time.sleep(5)
-    code = retrieve_phone_code(driver)
-    WebDriverWait(driver, 20).until(EC.visibility_of_element_located(page.sms_code_field)).send_keys(code)
-    WebDriverWait(driver, 20).until(EC.element_to_be_clickable(page.confirm_button)).click()
